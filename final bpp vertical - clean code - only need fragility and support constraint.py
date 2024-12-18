@@ -173,7 +173,7 @@ for i in Items:
 for i in Items:
     for j in Items:
         if j != i:
-            model.addConstr(y[i] >= y[j] + H_i[j] * (1 - r[j]) + L_i[j] * r[j] - H_max * (1 - s[i, j])) # item i is not above item j
+            model.addConstr(y[i] >= y[j] + H_i[j] * (1 - r[j]) + L_i[j] * r[j] - H_max * (1 - s[i, j])) # i should be on top of j, either rotated or not and lower than the height of the bin
             model.addConstr(s[i, j] <= quicksum(p[i, b] * p[j, b] for b in Bins))  # Ensure both items are in the same bin
 
 # ===============================Solve the problem===============================
