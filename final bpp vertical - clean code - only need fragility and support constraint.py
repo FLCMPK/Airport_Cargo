@@ -97,6 +97,7 @@ g = model.addVars(Items, vtype=GRB.BINARY, name="g") # 1 if item i is placed on 
 a1 = model.addVars(Items, Items, vtype=GRB.BINARY, name="a1") # 1 if vertex 1 of item i is placed on top of item j
 a2 = model.addVars(Items, Items, vtype=GRB.BINARY, name="a2") # 1 if vertex 2 of item i is placed on top of item j
 c = model.addVars(Items, vtype=GRB.BINARY, name="c") # 1 if vertex 1 of item i is placed on the bin cut
+s = model.addVars(Items, Items, vtype=GRB.BINARY, name="s") # 1 if item i is stacked on top of item j
 
 # ===============================Define objective function===============================
 model.setObjective(quicksum(C_b[b] * z[b] for b in Bins), GRB.MINIMIZE)
@@ -167,6 +168,13 @@ for i in Items:
 # item stability constraint, item i must be placed on the ground or on top of another item or on the bin cut (only for bin type 1)
 for i in Items:
     model.addConstr(c[i] + quicksum(a1[i, j] for j in Items if j != i) + quicksum(a2[i, j] for j in Items if j != i) + (2 * g[i]) >= 2)
+
+# Stacking constraint: item i can only be placed on top of item j if item j can support item i
+for i in Items:
+    for j in Items:
+        if j != i:
+            model.addConstr(y[i] >= y[j] + H_i[j] * (1 - r[j]) + L_i[j] * r[j] - H_max * (1 - s[i, j])) # item i is not above item j
+            model.addConstr(s[i, j] <= quicksum(p[i, b] * p[j, b] for b in Bins))  # Ensure both items are in the same bin
 
 # ===============================Solve the problem===============================
 model.optimize()
