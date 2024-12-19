@@ -52,6 +52,7 @@ I = {1: {'L': 4, 'H': 2, 'rotation': 1, 'perishable': 1, 'radioactive': 0, 'frag
      14: {'L': 2, 'H': 1, 'rotation': 1, 'perishable': 0, 'radioactive': 1, 'fragility': 0},
      15: {'L': 2, 'H': 3, 'rotation': 1, 'perishable': 0, 'radioactive': 1, 'fragility': 0},
      16: {'L': 2, 'H': 6, 'rotation': 1, 'perishable': 0, 'radioactive': 1, 'fragility': 0},
+     17: {'L': 2, 'H': 2, 'rotation': 1, 'perishable': 0, 'radioactive': 0, 'fragility': 0},
      }
 
 
@@ -87,8 +88,9 @@ eps = 0.1
 M = 10000
 
 # ===============================Define decision variables===============================
-x = model.addVars(Items, vtype=GRB.CONTINUOUS, name="x") # x-coordinate of the bottom-left corner of item i
-y = model.addVars(Items, vtype=GRB.CONTINUOUS, name="y") # y-coordinate of the bottom-left corner of item i
+# If we ever want x and y to not be integers, we have to change at least the fragility constraint.
+x = model.addVars(Items, vtype=GRB.INTEGER, name="x") # x-coordinate of the bottom-left corner of item i
+y = model.addVars(Items, vtype=GRB.INTEGER, name="y") # y-coordinate of the bottom-left corner of item i
 r = model.addVars(Items, vtype=GRB.BINARY, name="r") # 1 if item i is rotated
 p = model.addVars(Items, Bins, vtype=GRB.BINARY, name="p") # 1 if item i is packed in bin b
 l = model.addVars(Items, Items, vtype=GRB.BINARY, name="l") # 1 if items i is to the left of item j
@@ -238,7 +240,7 @@ for i in Items:
                     x[i] + (I[i]['L'] * (1 - r[i]) + I[i]['H'] * r[i]) / 2 <= x[j2] + (I[j2]['L'] * (1 - r[j2]) + I[j2]['H'] * r[j2]) / 2 + (1 - s[i, j2]) * L_max
                 )
 
-# Ensure a3[i,j] = 1 if the vertical projections of i and j overlap, and 0 otherwise
+# Ensure ol[i,j] = 1 if the vertical projections of i and j overlap, and 0 otherwise
 M = 10000
 eps = 0.001
 for i in Items:
@@ -259,7 +261,7 @@ for i in Items:
             model.addConstr(ol2[i,j] >= ol[i,j], "c_if_a_1")
             model.addConstr(ol1[i,j] + ol2[i,j] == 1 + ol[i,j], "exactly_one_b_or_c_if_a_0")
 
-# Ensure a4[i,j] = 1 if the bottom of i and the top of j share the same y-coordinate, and 0 otherwise
+# Ensure vt[i,j] = 1 if the bottom of i and the top of j share the same y-coordinate, and 0 otherwise
 for i in Items:
     for j in Items:
         if i != j:
@@ -267,18 +269,18 @@ for i in Items:
             a = y[i]
             b = y[j] + height_j
 
-            # If x > y, then b = 1, otherwise b = 0
+            # If a > b, then vt1 = 1, otherwise vt1 = 0
             model.addConstr(a >= b + eps - M * (1 - vt1[i,j]))
             model.addConstr(a <= b + M * vt1[i,j])
 
-            # If x < y, then c = 1, otherwise c = 0
+            # If a < b, then vt2 = 1, otherwise vt2 = 0
             model.addConstr(b >= a + eps - M * (1 - vt2[i,j]))
             model.addConstr(b <= a + M * vt2[i,j])
 
             # Ensure either b, c, or d is 1.
             model.addConstr(vt1[i,j] + vt2[i,j] + vt[i,j] == 1)
 
-# Constraints to link sb[i, j] and p[i, b]
+# Constraints to link sb[i,j] and p[i, b]
 for i in Items:
     for j in Items:
         if i != j:
@@ -303,7 +305,6 @@ for i in Items:
                 model.addConstr(st[i,j] == 0)
 
 # ===============================Solve the problem===============================
-model.setParam(GRB.Param.TimeLimit, 20)
 model.optimize()
 
 I_b = {b: [] for b in B.keys()}
@@ -362,6 +363,6 @@ for b in B.keys():
         ax.set_xlabel('Length',**axis_font)
         ax.set_ylabel('Height',**axis_font)
         ax.grid(True)
-        # plt.show()
+        plt.show()
         fig.savefig('bin_%i.png'%(b), format='png', dpi=400, bbox_inches='tight',
                  transparent=True,pad_inches=0.02)
