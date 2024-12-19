@@ -176,10 +176,62 @@ for i in Items:
             model.addConstr(y[i] >= y[j] + H_i[j] * (1 - r[j]) + L_i[j] * r[j] - H_max * (1 - s[i, j])) # i should be on top of j, either rotated or not and lower than the height of the bin
             model.addConstr(s[i, j] <= quicksum(p[i, b] * p[j, b] for b in Bins))  # Ensure both items are in the same bin
 
+# Define auxiliary variables for the product of two binary variables
+aux1 = model.addVars(Items, Items, Bins, vtype=GRB.BINARY, name="aux1")
+aux2 = model.addVars(Items, Items, Bins, vtype=GRB.BINARY, name="aux2")
+
+# Define constraints for the auxiliary variables
+for i in Items:
+    for j1 in Items:
+        for j2 in Items:
+            if j1 != i and j2 != i and j1 != j2:
+                for b in Bins:
+                    model.addConstr(aux1[i, j1, b] <= p[i, b])
+                    model.addConstr(aux1[i, j1, b] <= p[j1, b])
+                    model.addConstr(aux1[i, j1, b] >= p[i, b] + p[j1, b] - 1)
+                    model.addConstr(aux2[i, j2, b] <= p[i, b])
+                    model.addConstr(aux2[i, j2, b] <= p[j2, b])
+                    model.addConstr(aux2[i, j2, b] >= p[i, b] + p[j2, b] - 1)
+
+# Center of gravity constraint: the center of gravity of the top box must be within the base of the bottom box
+for i in Items:
+    for j in Items:
+        if j != i:
+            model.addConstr(
+                x[i] + (I[i]['L'] * (1 - r[i]) + I[i]['H'] * r[i]) / 2 >= x[j] - (I[j]['L'] * (1 - r[j]) + I[j]['H'] * r[j]) / 2 - (1 - s[i, j]) * L_max
+            )
+            model.addConstr(
+                x[i] + (I[i]['L'] * (1 - r[i]) + I[i]['H'] * r[i]) / 2 <= x[j] + (I[j]['L'] * (1 - r[j]) + I[j]['H'] * r[j]) / 2 + (1 - s[i, j]) * L_max
+            )
+
+# New constraint: if the top box is on top of two boxes, its center of gravity must be on top of at least one of these boxes
+for i in Items:
+    for j1 in Items:
+        for j2 in Items:
+            if j1 != i and j2 != i and j1 != j2:
+                model.addConstr(
+                    s[i, j1] + s[i, j2] <= 1 + quicksum(aux1[i, j1, b] * p[j2, b] for b in Bins)
+                )
+                model.addConstr(
+                    s[i, j1] + s[i, j2] <= 1 + quicksum(aux2[i, j2, b] * p[j1, b] for b in Bins)
+                )
+                model.addConstr(
+                    x[i] + (I[i]['L'] * (1 - r[i]) + I[i]['H'] * r[i]) / 2 >= x[j1] - (I[j1]['L'] * (1 - r[j1]) + I[j1]['H'] * r[j1]) / 2 - (1 - s[i, j1]) * L_max
+                )
+                model.addConstr(
+                    x[i] + (I[i]['L'] * (1 - r[i]) + I[i]['H'] * r[i]) / 2 <= x[j1] + (I[j1]['L'] * (1 - r[j1]) + I[j1]['H'] * r[j1]) / 2 + (1 - s[i, j1]) * L_max
+                )
+                model.addConstr(
+                    x[i] + (I[i]['L'] * (1 - r[i]) + I[i]['H'] * r[i]) / 2 >= x[j2] - (I[j2]['L'] * (1 - r[j2]) + I[j2]['H'] * r[j2]) / 2 - (1 - s[i, j2]) * L_max
+                )
+                model.addConstr(
+                    x[i] + (I[i]['L'] * (1 - r[i]) + I[i]['H'] * r[i]) / 2 <= x[j2] + (I[j2]['L'] * (1 - r[j2]) + I[j2]['H'] * r[j2]) / 2 + (1 - s[i, j2]) * L_max
+                )
 # ===============================Solve the problem===============================
 model.optimize()
 
 I_b = {b: [] for b in B.keys()}
+
 
 # ===============================Print the results===============================
 print('Overall cost of used bins:', model.objVal)
