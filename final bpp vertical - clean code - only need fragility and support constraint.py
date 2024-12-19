@@ -36,22 +36,22 @@ for t,v in T.items():
 B_type = {t:[k for k,v in B.items() if v['type']==t] for t in T.keys()}
 
 # Items - needs to add fragility type
-I = {1: {'L': 4, 'H': 2, 'rotation': 1, 'perishable': 1, 'radioactive': 0, 'fragility': 1},
-     2: {'L': 2, 'H': 3, 'rotation': 1, 'perishable': 1, 'radioactive': 0, 'fragility': 1},
-     3: {'L': 2, 'H': 5, 'rotation': 0, 'perishable': 1, 'radioactive': 0, 'fragility': 1},
-     4: {'L': 5, 'H': 1, 'rotation': 1, 'perishable': 1, 'radioactive': 0, 'fragility': 1},
-     5: {'L': 3, 'H': 3, 'rotation': 1, 'perishable': 1, 'radioactive': 0, 'fragility': 1},
-     6: {'L': 3, 'H': 2, 'rotation': 1, 'perishable': 0, 'radioactive': 0, 'fragility': 0},
-     7: {'L': 2, 'H': 3, 'rotation': 1, 'perishable': 1, 'radioactive': 0, 'fragility': 0},
-     8: {'L': 5, 'H': 2, 'rotation': 1, 'perishable': 1, 'radioactive': 0, 'fragility': 0},
-     9: {'L': 3, 'H': 1, 'rotation': 0, 'perishable': 0, 'radioactive': 0, 'fragility': 0},
-     10: {'L': 2, 'H': 1, 'rotation': 1, 'perishable': 0, 'radioactive': 0, 'fragility': 0},
-     11: {'L': 5, 'H': 1, 'rotation': 1, 'perishable': 1, 'radioactive': 0, 'fragility': 0},
-     12: {'L': 4, 'H': 3, 'rotation': 0, 'perishable': 0, 'radioactive': 1, 'fragility': 0},
-     13: {'L': 4, 'H': 2, 'rotation': 1, 'perishable': 0, 'radioactive': 1, 'fragility': 0},
-     14: {'L': 2, 'H': 1, 'rotation': 1, 'perishable': 0, 'radioactive': 1, 'fragility': 0},
-     15: {'L': 2, 'H': 3, 'rotation': 1, 'perishable': 0, 'radioactive': 1, 'fragility': 0},
-     16: {'L': 2, 'H': 6, 'rotation': 1, 'perishable': 0, 'radioactive': 1, 'fragility': 0},
+I = {1:{'L':4,'H':2,'rotation':1,'perishable':1,'radioactive':0},
+    2:{'L':2,'H':3,'rotation':1,'perishable':1,'radioactive':0}, 
+    3:{'L':2,'H':5,'rotation':0,'perishable':1,'radioactive':0}, 
+    4:{'L':5,'H':1,'rotation':1,'perishable':1,'radioactive':0},
+    5:{'L':3,'H':3,'rotation':1,'perishable':1,'radioactive':0},
+    6:{'L':3,'H':2,'rotation':1,'perishable':0,'radioactive':0},
+    7:{'L':2,'H':3,'rotation':1,'perishable':1,'radioactive':0},
+    8:{'L':5,'H':2,'rotation':1,'perishable':1,'radioactive':0},
+    9:{'L':3,'H':1,'rotation':0,'perishable':0,'radioactive':0},
+    10:{'L':2,'H':1,'rotation':1,'perishable':0,'radioactive':0},
+    11:{'L':5,'H':1,'rotation':1,'perishable':1,'radioactive':0},
+    12:{'L':4,'H':3,'rotation':0,'perishable':0,'radioactive':1},
+    13:{'L':4,'H':2,'rotation':1,'perishable':0,'radioactive':1},
+    14:{'L':2,'H':1,'rotation':1,'perishable':0,'radioactive':1},
+    15:{'L':2,'H':3,'rotation':1,'perishable':0,'radioactive':1},
+    16:{'L':2,'H':6,'rotation':1,'perishable':0,'radioactive':1}     
      }
 
 # Incompatible items (pairs) list due to item type of perishable and radioactive cannot be placed in the same bin
@@ -96,14 +96,6 @@ z = model.addVars(Bins, vtype=GRB.BINARY, name="z") # 1 if bin b is used
 g = model.addVars(Items, vtype=GRB.BINARY, name="g") # 1 if item i is placed on the ground
 a1 = model.addVars(Items, Items, vtype=GRB.BINARY, name="a1") # 1 if vertex 1 of item i is placed on top of item j
 a2 = model.addVars(Items, Items, vtype=GRB.BINARY, name="a2") # 1 if vertex 2 of item i is placed on top of item j
-ol = model.addVars(Items, Items, vtype=GRB.BINARY, name="ol")  # 1 if the vertical projections of i and j overlap
-ol1 = model.addVars(Items, Items, vtype=GRB.BINARY, name="ol1")
-ol2 = model.addVars(Items, Items, vtype=GRB.BINARY, name="ol2")
-vt = model.addVars(Items, Items, vtype=GRB.BINARY, name="vt")  # 1 if bottom of i and top of j share y-coordinate
-vt1 = model.addVars(Items, Items, vtype=GRB.BINARY, name="vt1")
-vt2 = model.addVars(Items, Items, vtype=GRB.BINARY, name="vt2")
-sb = model.addVars(Items, Items, vtype=GRB.BINARY, name="sb") # 1 if i and j are in the same bin, 0 otherwise
-st = model.addVars(Items, Items, vtype=GRB.BINARY, name="st")  # 1 if ol, vt and sb are all 1, 0 otherwise
 c = model.addVars(Items, vtype=GRB.BINARY, name="c") # 1 if vertex 1 of item i is placed on the bin cut
 s = model.addVars(Items, Items, vtype=GRB.BINARY, name="s") # 1 if item i is stacked on top of item j
 
@@ -184,80 +176,62 @@ for i in Items:
             model.addConstr(y[i] >= y[j] + H_i[j] * (1 - r[j]) + L_i[j] * r[j] - H_max * (1 - s[i, j])) # i should be on top of j, either rotated or not and lower than the height of the bin
             model.addConstr(s[i, j] <= quicksum(p[i, b] * p[j, b] for b in Bins))  # Ensure both items are in the same bin
 
-# Ensure a3[i,j] = 1 if the vertical projections of i and j overlap, and 0 otherwise
-M = 10000
-eps = 0.001
+# Define auxiliary variables for the product of two binary variables
+aux1 = model.addVars(Items, Items, Bins, vtype=GRB.BINARY, name="aux1")
+aux2 = model.addVars(Items, Items, Bins, vtype=GRB.BINARY, name="aux2")
+
+# Define constraints for the auxiliary variables
+for i in Items:
+    for j1 in Items:
+        for j2 in Items:
+            if j1 != i and j2 != i and j1 != j2:
+                for b in Bins:
+                    model.addConstr(aux1[i, j1, b] <= p[i, b])
+                    model.addConstr(aux1[i, j1, b] <= p[j1, b])
+                    model.addConstr(aux1[i, j1, b] >= p[i, b] + p[j1, b] - 1)
+                    model.addConstr(aux2[i, j2, b] <= p[i, b])
+                    model.addConstr(aux2[i, j2, b] <= p[j2, b])
+                    model.addConstr(aux2[i, j2, b] >= p[i, b] + p[j2, b] - 1)
+
+# Center of gravity constraint: the center of gravity of the top box must be within the base of the bottom box
 for i in Items:
     for j in Items:
-        if i != j:
-            width_j = L_i[j]*(1 - r[j]) + H_i[j]*r[j]
-            width_i = L_i[i]*(1 - r[i]) + H_i[i]*r[i]
+        if j != i:
+            model.addConstr(
+                x[i] + (I[i]['L'] * (1 - r[i]) + I[i]['H'] * r[i]) / 2 >= x[j] - (I[j]['L'] * (1 - r[j]) + I[j]['H'] * r[j]) / 2 - (1 - s[i, j]) * L_max
+            )
+            model.addConstr(
+                x[i] + (I[i]['L'] * (1 - r[i]) + I[i]['H'] * r[i]) / 2 <= x[j] + (I[j]['L'] * (1 - r[j]) + I[j]['H'] * r[j]) / 2 + (1 - s[i, j]) * L_max
+            )
 
-            # Constraints for overlap (if a = 1)
-            model.addConstr(x[i] <= x[j] + width_j - eps + M * (1 - ol[i,j]), "overlap_cond1")
-            model.addConstr(x[j] <= x[i] + width_i - eps + M * (1 - ol[i,j]), "overlap_cond2")
-
-            # Constraints for non-overlap (if a = 0)
-            model.addConstr(x[i] + width_i <= x[j] + M * ol1[i,j], "non_overlap1")
-            model.addConstr(x[j] + width_j <= x[i] + M * ol2[i,j], "non_overlap2")
-
-            model.addConstr(ol1[i,j] >= ol[i,j], "b_if_a_1")
-            model.addConstr(ol2[i,j] >= ol[i,j], "c_if_a_1")
-            model.addConstr(ol1[i,j] + ol2[i,j] == 1 + ol[i,j], "exactly_one_b_or_c_if_a_0")
-
-# Ensure a4[i,j] = 1 if the bottom of i and the top of j share the same y-coordinate, and 0 otherwise
-# Constants
-# M is chosen to be as small as possible given the bounds on x and y
-eps = 0.0001
-M = 1000
-
+# New constraint: if the top box is on top of two boxes, its center of gravity must be on top of at least one of these boxes
 for i in Items:
-    for j in Items:
-        if i != j:
-            height_j = H_i[j] * (1 - r[j]) + L_i[j] * r[j]
-            a = y[i]
-            b = y[j] + height_j
-
-            # If x > y, then b = 1, otherwise b = 0
-            model.addConstr(a >= b + eps - M * (1 - vt1[i,j]))
-            model.addConstr(a <= b + M * vt1[i,j])
-
-            # If x < y, then c = 1, otherwise c = 0
-            model.addConstr(b >= a + eps - M * (1 - vt2[i,j]))
-            model.addConstr(b <= a + M * vt2[i,j])
-
-            # Ensure either b, c, or d is 1.
-            model.addConstr(vt1[i,j] + vt2[i,j] + vt[i,j] == 1)
-
-# Constraints to link sb[i, j] and p[i, b]
-for i in Items:
-    for j in Items:
-        if i != j:
-            # Ensure z[i, j] is 1 if i and j share any bin
-            model.addConstr(sb[i, j] <= quicksum(p[i, b] * p[j, b] for b in Bins))
-            model.addConstrs(sb[i, j] >= p[i, b] + p[j, b] - 1 for b in Bins)
-
-# Ensure that if ol[i,j], vt[i,j] ad sb[i,j] are all 1, st[i,j] is 1 and 0 otherwise.
-for i in Items:
-    for j in Items:
-        if i != j:
-            model.addConstr(st[i,j] >= ol[i,j] + vt[i,j] + sb[i,j] - 2)
-            model.addConstr(st[i,j] <= ol[i,j])
-            model.addConstr(st[i,j] <= vt[i,j])
-            model.addConstr(st[i,j] <= sb[i,j])
-
-# Fragility constraint
-for i in Items:
-    for j in Items:
-        if i != j:
-            if I[j]['fragility'] == 1:
-                model.addConstr(st[i,j] == 0)
-
+    for j1 in Items:
+        for j2 in Items:
+            if j1 != i and j2 != i and j1 != j2:
+                model.addConstr(
+                    s[i, j1] + s[i, j2] <= 1 + quicksum(aux1[i, j1, b] * p[j2, b] for b in Bins)
+                )
+                model.addConstr(
+                    s[i, j1] + s[i, j2] <= 1 + quicksum(aux2[i, j2, b] * p[j1, b] for b in Bins)
+                )
+                model.addConstr(
+                    x[i] + (I[i]['L'] * (1 - r[i]) + I[i]['H'] * r[i]) / 2 >= x[j1] - (I[j1]['L'] * (1 - r[j1]) + I[j1]['H'] * r[j1]) / 2 - (1 - s[i, j1]) * L_max
+                )
+                model.addConstr(
+                    x[i] + (I[i]['L'] * (1 - r[i]) + I[i]['H'] * r[i]) / 2 <= x[j1] + (I[j1]['L'] * (1 - r[j1]) + I[j1]['H'] * r[j1]) / 2 + (1 - s[i, j1]) * L_max
+                )
+                model.addConstr(
+                    x[i] + (I[i]['L'] * (1 - r[i]) + I[i]['H'] * r[i]) / 2 >= x[j2] - (I[j2]['L'] * (1 - r[j2]) + I[j2]['H'] * r[j2]) / 2 - (1 - s[i, j2]) * L_max
+                )
+                model.addConstr(
+                    x[i] + (I[i]['L'] * (1 - r[i]) + I[i]['H'] * r[i]) / 2 <= x[j2] + (I[j2]['L'] * (1 - r[j2]) + I[j2]['H'] * r[j2]) / 2 + (1 - s[i, j2]) * L_max
+                )
 # ===============================Solve the problem===============================
-model.setParam(GRB.Param.TimeLimit, 20)
 model.optimize()
 
 I_b = {b: [] for b in B.keys()}
+
 
 # ===============================Print the results===============================
 print('Overall cost of used bins:', model.objVal)
@@ -312,6 +286,6 @@ for b in B.keys():
         ax.set_xlabel('Length',**axis_font)
         ax.set_ylabel('Height',**axis_font)
         ax.grid(True)
-        # plt.show()
+        plt.show()
         fig.savefig('bin_%i.png'%(b), format='png', dpi=400, bbox_inches='tight',
                  transparent=True,pad_inches=0.02)
