@@ -110,8 +110,8 @@ cutB_b = {k: v['cutB'] for k, v in B.items()}
 L_i = {k: v['L'] for k, v in I.items()}
 H_i = {k: v['H'] for k, v in I.items()}
 
-eps = 0.1
-bigM = 10000
+eps = 1
+bigM = 1000
 
 n = len(Items)
 
