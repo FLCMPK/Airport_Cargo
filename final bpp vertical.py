@@ -216,6 +216,6 @@ for b in B.keys():
         ax.set_xlabel('Length',**axis_font)
         ax.set_ylabel('Height',**axis_font)
         ax.grid(True)
-        plt.show()
+        # plt.show()
         fig.savefig('bin_%i.png'%(b), format='png', dpi=400, bbox_inches='tight',
                  transparent=True,pad_inches=0.02)

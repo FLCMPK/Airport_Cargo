@@ -14,8 +14,8 @@ from gurobipy import Model, GRB, quicksum
 
 # ===============================Read the data===============================
 # Define the path to the pickle files
-path_to_B = "/Users/paulkloos/Desktop/ERASMUS/Airport/Repository/Airport_Cargo-1/B.pickle"
-path_to_I = "/Users/paulkloos/Desktop/ERASMUS/Airport/Repository/Airport_Cargo-1/I.pickle"
+path_to_B = "B.pickle"
+path_to_I = "I.pickle"
 
 # Read the pickle files
 with open(path_to_B, 'rb') as file_B:
@@ -296,7 +296,7 @@ for j in Items:
 
 # ===============================Solve the problem===============================
 model.Params.LogFile = "2DBPP_model.log"
-model.Params.timeLimit = 7200
+model.Params.timeLimit = 72
 # model.Params.presolve = 2  # Aggressive presolve
 # model.Params.heuristics = 0.05
 
@@ -412,6 +412,6 @@ for b in B.keys():
         ax.set_xlabel('Length', **axis_font)
         ax.set_ylabel('Height', **axis_font)
         ax.grid(True)
-        plt.show()
+        # plt.show()
         fig.savefig('bin_%i.png' % (b), format='png', dpi=400, bbox_inches='tight',
                     transparent=True, pad_inches=0.02)

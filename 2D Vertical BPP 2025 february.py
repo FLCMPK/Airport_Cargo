@@ -14,8 +14,8 @@ from gurobipy import Model, GRB, quicksum
 
 # ===============================Read the data===============================
 # Define the path to the pickle files
-path_to_B = "C:/Users/malyd/OneDrive - Delft University of Technology/1st year/AE4446 Airport and Cargo Operations (202425 Q2)/assignment/B.pickle"
-path_to_I = "C:/Users/malyd/OneDrive - Delft University of Technology/1st year/AE4446 Airport and Cargo Operations (202425 Q2)/assignment/I.pickle"
+path_to_B = "B.pickle"
+path_to_I = "I.pickle"
 
 # Read the pickle files
 with open(path_to_B, 'rb') as file_B:
@@ -424,6 +424,6 @@ for b in B.keys():
         ]
         ax.legend(handles=legend_patches, loc='upper right', ncol=2)
         
-        plt.show()
+        #plt.show()
         fig.savefig('bin_%i.png' % (b), format='png', dpi=400, bbox_inches='tight',
                     transparent=True, pad_inches=0.02)

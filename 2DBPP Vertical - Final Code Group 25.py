@@ -111,7 +111,7 @@ L_i = {k: v['L'] for k, v in I.items()}
 H_i = {k: v['H'] for k, v in I.items()}
 
 eps = 1
-bigM = 1000
+bigM = 10000
 
 n = len(Items)
 
